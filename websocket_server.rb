@@ -24,10 +24,9 @@ class WebSocketServer
     request_line = socket.gets
     header = get_header(socket)
     if (request_line =~ /GET #{@path} HTTP\/1.1/) && (header =~ /Sec-WebSocket-Key: (.*)\r\n/)
-        #complete the handshake
-        ws_accept = create_websocket_accept($1)
-        send_handshake_response(socket, ws_accept)
-        return true
+      ws_accept = create_websocket_accept($1)
+      send_handshake_response(socket, ws_accept)
+      return true
     end
     send_400(socket)
     false
@@ -58,16 +57,4 @@ class WebSocketServer
     Base64.encode64(digest)
   end
 
-
-  
-end
-
-
-#testing
-server = WebSocketServer.new
-
-loop do
-  Thread.new(server.accept) do |connection|
-    puts "Connected"
-  end
 end
