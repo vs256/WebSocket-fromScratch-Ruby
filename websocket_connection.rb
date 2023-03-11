@@ -30,6 +30,22 @@ class WebSocketConnection
           decoded.pack("c*")
     end
 
+    def send(message)
+        bytes = [129]
+        size = message.bytesize
+      
+        bytes +=  if size <= 125
+                    [size]
+                  elsif size < 2**16
+                    [126] + [size].pack("n").bytes
+                  else
+                    [127] + [size].pack("Q>").bytes
+                  end
+      
+        bytes += message.bytes
+        data = bytes.pack("C*")
+        socket << data
+      end
 
 
 end
