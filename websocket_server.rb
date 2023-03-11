@@ -19,16 +19,28 @@ class WebSocketServer
         request_line = socket.gets
         header = get_header(socket)
         if (request_line =~ /GET #{@path} HTTP\/1.1/) && (header =~ /Sec-WebSocket-Key: (.*)\r\n/)
-            ws_accept = create__accept($1)
             #complete the handshake
+            ws_accept = create__accept($1) #create websocket accept
+            send_handshake_response(socket, ws_accept) #send back a response that websocket is accepted to upgrade
+            return true
         end
         send_400(socket)
         false # reject the handshake
+    end
 
+    def send_handshake_response(socket, ws_accept)
+        socket << "HTTP/1.1 101 Switching Protocols\r\n"
+                  "Upgrade: websocket\r\n"
+                  "Connection: Upgrade\r\n"
+                  "Sec-WebSocket-Accept: #{ws_accept}\r\n"
     end
 
     WS_MAGIC_STRING = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 
+    def create_websocket_accept(key)
+        digest = Digest::SHA1.digest(key + WS_MAGIC_STRING)
+        Base64.encode64(digest)
+    end
 
     def send_400(socket)
         socket << "HTTP/1.1 400 Bad Request\r\n" +
